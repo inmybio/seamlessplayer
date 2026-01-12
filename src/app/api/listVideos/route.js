@@ -1,4 +1,5 @@
 export const dynamic = "force-dynamic";
+export const runtime = "nodejs";
 
 export async function GET() {
   const MANIFEST_URL =
@@ -11,10 +12,11 @@ export async function GET() {
     const res = await fetch(MANIFEST_URL, { cache: "no-store" });
 
     if (!res.ok) {
-      throw new Error("Failed to fetch manifest");
+      throw new Error(`Fetch failed: ${res.status}`);
     }
 
-    const manifest = await res.json();
+    const text = await res.text(); // 🔑 critical
+    const manifest = JSON.parse(text);
 
     const folder67 = (manifest.folder67 || []).map(
       (f) => `${BASE}/folder67/${encodeURIComponent(f)}`
