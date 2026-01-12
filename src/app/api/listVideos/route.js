@@ -1,50 +1,40 @@
 export async function GET() {
-  const BASE = "https://pub-ed211d2dbf8d43b6a81391be2bf18901.r2.dev";
+  const MANIFEST_URL =
+    "https://pub-ed211d2dbf8d43b6a81391be2bf18901.r2.dev/manifest.json";
 
-  const folders = {
-    folder67: [
-      `${BASE}/2026-01-11%2013-38-31.mp4`,
-      `${BASE}/2026-01-11%2013-38-19.mp4`,
-      `${BASE}/2026-01-11%2013-38-09.mp4`,
-      `${BASE}/2026-01-11%2013-38-01.mp4`,
-      `${BASE}/2026-01-11%2013-37-51.mp4`,
-      `${BASE}/2026-01-11%2013-37-42.mp4`,
-      `${BASE}/2026-01-11%2013-37-33.mp4`,
-      `${BASE}/2026-01-11%2013-37-26.mp4`,
-      `${BASE}/2026-01-11%2013-37-16.mp4`,
-      `${BASE}/2026-01-11%2013-37-06.mp4`,
-      `${BASE}/2026-01-11%2013-36-57.mp4`,
-      `${BASE}/2026-01-11%2013-36-48.mp4`,
-      `${BASE}/2026-01-11%2013-36-41.mp4`,
-      `${BASE}/2026-01-11%2013-36-32.mp4`,
-      `${BASE}/2026-01-11%2013-36-24.mp4`,
-      `${BASE}/2026-01-11%2013-36-16.mp4`,
-
-      `${BASE}/2026-01-11%2016-28-33.mp4`,
-      `${BASE}/2026-01-11%2016-28-21.mp4`,
-      `${BASE}/2026-01-11%2016-28-11.mp4`,
-      `${BASE}/2026-01-11%2016-28-00.mp4`,
-      `${BASE}/2026-01-11%2016-27-46.mp4`,
-      `${BASE}/2026-01-11%2016-27-37.mp4`,
-      `${BASE}/2026-01-11%2016-27-29.mp4`,
-      `${BASE}/2026-01-11%2016-27-20.mp4`,
-      `${BASE}/2026-01-11%2016-27-09.mp4`,
-      `${BASE}/2026-01-11%2016-26-58.mp4`,
-      `${BASE}/2026-01-11%2016-26-49.mp4`,
-      `${BASE}/2026-01-11%2016-26-38.mp4`,
-      `${BASE}/2026-01-11%2016-26-26.mp4`,
-      `${BASE}/2026-01-11%2016-26-14.mp4`,
-      `${BASE}/2026-01-11%2016-26-01.mp4`,
-
-      `${BASE}/2026-01-11%2013-38-40.mp4`
-    ]
-  };
-
-  return new Response(JSON.stringify(folders), {
-    status: 200,
-    headers: {
-      "Content-Type": "application/json",
-      "Cache-Control": "no-store"
+  try {
+    const res = await fetch(MANIFEST_URL, { cache: "no-store" });
+    if (!res.ok) {
+      throw new Error("Failed to fetch manifest");
     }
-  });
+
+    const manifest = await res.json();
+
+    const BASE =
+      "https://pub-ed211d2dbf8d43b6a81391be2bf18901.r2.dev";
+
+    // Build full URLs for folder67
+    const folder67 = (manifest.folder67 || []).map(
+      (file) => `${BASE}/folder67/${encodeURIComponent(file)}`
+    );
+
+    return new Response(
+      JSON.stringify({
+        folder67,
+        // optional fallback loop
+        loop45: [`${BASE}/folder67/45sec.mp4`],
+      }),
+      {
+        headers: { "Content-Type": "application/json" },
+      }
+    );
+  } catch (err) {
+    return new Response(
+      JSON.stringify({
+        error: err.message,
+        folder67: [],
+      }),
+      { status: 500 }
+    );
+  }
 }
