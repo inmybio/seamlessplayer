@@ -79,7 +79,6 @@ export default function VideoPlayer() {
     <video
       ref={videoRef}
       autoPlay
-      muted
       playsInline
       controls={false}
       onEnded={playNext}
