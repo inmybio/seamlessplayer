@@ -17,6 +17,7 @@ export default function VideoPlayer() {
   const [normalVideos, setNormalVideos] = useState([]);
   const [index, setIndex] = useState(0);
   const [playShortNext, setPlayShortNext] = useState(false);
+  const [started, setStarted] = useState(false);
 
   const SHORT_VIDEO =
     "https://pub-ed211d2dbf8d43b6a81391be2bf18901.r2.dev/folder67/45sec.mp4";
@@ -39,14 +40,30 @@ export default function VideoPlayer() {
     load();
   }, []);
 
+  function safePlay(src) {
+    const v = videoRef.current;
+    if (!v) return;
+
+    v.src = src;
+    v.load();
+
+    const playPromise = v.play();
+    if (playPromise?.catch) {
+      playPromise.catch(() => {
+        // autoplay blocked — user click will fix
+      });
+    }
+  }
+
   function playNext() {
+    if (!videoRef.current) return;
+
     let nextSrc;
 
     if (playShortNext) {
       nextSrc = SHORT_VIDEO;
       setPlayShortNext(false);
     } else {
-      // reshuffle when cycle finishes
       if (index >= normalVideos.length) {
         const reshuffled = shuffle(normalVideos);
         setNormalVideos(reshuffled);
@@ -59,30 +76,57 @@ export default function VideoPlayer() {
       setPlayShortNext(true);
     }
 
-    if (videoRef.current) {
-      videoRef.current.src = nextSrc;
-      videoRef.current.play();
-    }
+    safePlay(nextSrc);
   }
 
-  // Start first video
-  useEffect(() => {
-    if (normalVideos.length && videoRef.current) {
-      videoRef.current.src = normalVideos[0];
-      videoRef.current.play();
-      setIndex(1);
-      setPlayShortNext(true);
-    }
-  }, [normalVideos]);
+  // Start first video once user clicks
+  function startPlayback() {
+    if (!videoRef.current || !normalVideos.length) return;
+
+    const v = videoRef.current;
+    v.muted = false;
+    v.volume = 1;
+
+    safePlay(normalVideos[0]);
+
+    setIndex(1);
+    setPlayShortNext(true);
+    setStarted(true);
+  }
 
   return (
-    <video
-      ref={videoRef}
-      autoPlay
-      playsInline
-      controls={false}
-      onEnded={playNext}
-      style={{ width: "100%", height: "100%" }}
-    />
+    <div
+      onClick={!started ? startPlayback : undefined}
+      style={{
+        width: "100vw",
+        height: "100vh",
+        background: "black",
+        cursor: !started ? "pointer" : "default",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center"
+      }}
+    >
+      {!started && (
+        <div
+          style={{
+            position: "absolute",
+            color: "white",
+            fontSize: 24,
+            zIndex: 10
+          }}
+        >
+          Click to start
+        </div>
+      )}
+
+      <video
+        ref={videoRef}
+        playsInline
+        muted
+        onEnded={playNext}
+        style={{ width: "100%", height: "100%" }}
+      />
+    </div>
   );
 }
