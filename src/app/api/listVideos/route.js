@@ -1,3 +1,4 @@
+// force redeploy
 export async function GET() {
   const MANIFEST_URL =
     "https://pub-ed211d2dbf8d43b6a81391be2bf18901.r2.dev/manifest.json";
@@ -35,3 +36,4 @@ export async function GET() {
     return Response.json({ error: e.message }, { status: 500 });
   }
 }
+
